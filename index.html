@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>동위원소 조회</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    form, .records, .list { margin-bottom: 20px; }
+    .record { display: flex; justify-content: space-between; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+  <!-- 동위원소 조회 폼 -->
+  <h2>동위원소 조회</h2>
+  <form id="searchForm">
+    <label>번호: <input type="text" id="isotopeNumber" required></label>
+    <button type="submit">조회</button>
+  </form>
+  <div id="information">
+
+  </div>   
+  <!-- 조회된 기록 -->
+  <div class="records">
+    <h3>기록</h3>
+    <div id="recordList">
+      <!-- 여기에 기록이 자동 조회되어 표시됨 -->
+    </div>
+  </div>
+
+  <!-- 동위원소 전체 리스트 -->
+  <div class="list">
+    <button id="showListBtn">동위원소 리스트 보기</button>
+    <ul id="isotopeList">
+      <!-- 리스트 항목이 여기에 추가됨 -->
+    </ul>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      loadRecords(); // 자동 기록 로딩
+
+      document.getElementById("searchForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const number = document.getElementById("isotopeNumber").value;
+
+        // 동위원소 기록 추가 (POST)
+        await fetch('http://localhost:8000/isotopes/' + number, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        let res = await fetch('http://localhost:8000/isotopes/'+number, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          });
+        res = await res.json();
+        document.getElementById("information").innerHTML  = `
+            <span>원자번호: ${res.number}</span><br>
+            <span>원소기호: ${res.symbol}</span><br>
+            <span>원소이름: ${res.name}</span><br>
+        `
+        Object.entries(res.mass).forEach(([key, value]) => {
+            document.getElementById("information").innerHTML += `
+            <span>원자량: ${key}, 존재비율: ${value}</span><br>
+        `
+        });
+        document.getElementById("information").innerHTML += `
+            <span>원자량: ${res.weight}</span><br>
+            <span>원자량그래프</span>
+            ${res.svg_data}
+        `
+      
+        document.getElementById("isotopeNumber").value = "";
+
+        loadRecords(); // 갱신
+      });
+
+      document.getElementById("showListBtn").addEventListener("click", async () => {
+        const res = await fetch('http://localhost:8000/isotopes', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          });
+        const list = await res.json();
+
+        const ul = document.getElementById("isotopeList");
+        ul.innerHTML = "";
+        list.forEach(isotope => {
+          const li = document.createElement("span");
+          
+          li.innerHTML = `
+            원자번호: ${isotope.number} 
+            원소기호: ${isotope.symbol} 
+            원소이름: ${isotope.name} 
+            원자량: ${isotope.weight} 
+            <button onclick='goto(${isotope.number})'>그래프보기</button><br>
+            `;
+          ul.appendChild(li);
+        });
+      });
+    });
+
+    function goto(id) {
+        document.getElementById("isotopeNumber").value = id;
+    }
+    async function loadRecords() {
+      const res = await fetch('http://localhost:8000/histories', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const records = await res.json();
+      const container = document.getElementById("recordList");
+      container.innerHTML = `<div class='record'>
+            <span>히스토리 id</span>
+            <span>원자번호</span>
+            <span>시간</span>
+            <span>삭제</span>
+        </div>`;
+
+      records.forEach(record => {
+        const div = document.createElement("div");
+        div.className = "record";
+        div.innerHTML += `
+          <span>${record.history_id}</span>
+          <span>${record.isotope_number == 0 ? '전체' : record.isotope_number}</span>
+          <span>${record.seen_at}</span>
+          <button onclick="deleteRecord(${record.history_id})">삭제</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function deleteRecord(id) {
+      await fetch(`http://localhost:8000/histories/${id}`, { method: 'DELETE' });
+      loadRecords(); // 삭제 후 다시 로드
+    }
+  </script>
+
+</body>
+</html>
