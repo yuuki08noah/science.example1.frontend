@@ -45,11 +45,11 @@
         const number = document.getElementById("isotopeNumber").value;
 
         // 동위원소 기록 추가 (POST)
-        await fetch('http://app:8000/isotopes/' + number, {
+        await fetch('http://34.47.77.28:8000/isotopes/' + number, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         });
-        let res = await fetch('http://app:8000/isotopes/'+number, {
+        let res = await fetch('http://34.47.77.28:8000/isotopes/'+number, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
           });
@@ -76,7 +76,7 @@
       });
 
       document.getElementById("showListBtn").addEventListener("click", async () => {
-        const res = await fetch('http://app:8000/isotopes', {
+        const res = await fetch('http://34.47.77.28:8000/isotopes', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
           });
@@ -103,7 +103,7 @@
         document.getElementById("isotopeNumber").value = id;
     }
     async function loadRecords() {
-      const res = await fetch('http://app:8000/histories', {
+      const res = await fetch('http://34.47.77.28:8000/histories', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -130,7 +130,7 @@
     }
 
     async function deleteRecord(id) {
-      await fetch(`http://app:8000/histories/${id}`, { method: 'DELETE' });
+      await fetch(`http://34.47.77.28:8000/histories/${id}`, { method: 'DELETE' });
       loadRecords(); // 삭제 후 다시 로드
     }
   </script>
