@@ -43,6 +43,10 @@
       document.getElementById("searchForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const number = document.getElementById("isotopeNumber").value;
+        if (number > 20) {
+          alert("1~20번 사이의 원소번호만 저장되어 있습니다.")
+          return;
+        } 
 
         // 동위원소 기록 추가 (POST)
         await fetch('http://34.47.77.28:8000/isotopes/' + number, {
